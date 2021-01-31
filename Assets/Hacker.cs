@@ -1,4 +1,6 @@
-﻿using UnityEngine;
+﻿using System.IO;
+using System.Threading.Tasks;
+using UnityEngine;
 
 public class Hacker : MonoBehaviour
 {
@@ -10,13 +12,34 @@ public class Hacker : MonoBehaviour
     }
     Screen CurrentScreen;
     string Password;
-    string[] Level1Passwords = {"books","aisle","self","password","font","borrow"};
-    string[] Level2Passwords = {"prisoner","handcuffs","holster","uniform","arrest"};
+    string[] Passwords;
+    const string MenuHint = "Type menu at any time to return menu";
     // Start is called before the first frame update
-    void Start()
+    async void Start()
     {
+        Initialize();
+        ShowStart();
+        await Task.Delay(3000);
         ShowMainMenu();
     }
+
+    void Initialize()
+    {
+        Passwords=File.ReadAllLines("Assets/Passwords.txt");
+    }
+
+    void ShowStart()
+    {
+        Terminal.WriteLine(@"
+ _                _             
+| |              | |            
+| |__   __ _  ___| | _____ _ __ 
+| '_ \ / _` |/ __| |/ / _ \ '__|
+| | | | (_| | (__|   <  __/ |   
+|_| |_|\__,_|\___|_|\_\___|_| 
+");
+    }
+
     void ShowMainMenu() {
         CurrentScreen = Screen.MainMenu;
         Terminal.ClearScreen();
@@ -26,42 +49,43 @@ public class Hacker : MonoBehaviour
             "\nPress 3 for NASA" +
             "\n\nEnter your selection");
     }
-    void OnUserInput(string Input)
+    async void OnUserInput(string Input)
     {
-        if (Input == "menu")
-        {
-            ShowMainMenu();
-        }
+        if (Input == "menu"){ShowMainMenu();}
+        else if (Input=="quit"|| Input=="close"||Input=="exit") {Application.Quit();}
         else if (CurrentScreen == Screen.MainMenu) { RunMainMenu(Input); }
-        else if (CurrentScreen == Screen.Password) { CheckPassword(Input); }
+        else if (CurrentScreen == Screen.Password) { await CheckPasswordAsync(Input); }
     }
 
     
 
 
-    private void RunMainMenu(string Input)
+    void RunMainMenu(string Input)
     {
-        bool isValidInput = (Input == "1" || Input == "2");
+        bool isValidInput = (Input == "1" || Input == "2" || Input=="3");
         if (isValidInput) {
             Level = int.Parse(Input);
-            StartGame();
+            AskForPassword();
         }
         else if (Input == "007"){
             Terminal.WriteLine("Please select a level Mr.Bond");
+            Terminal.WriteLine(MenuHint);
         }
         else{
             Terminal.WriteLine("Please choose a valid input");
+            Terminal.WriteLine(MenuHint);
         }
     }
 
-    void StartGame() {
+    void AskForPassword() {
         CurrentScreen = Screen.Password;
         Terminal.ClearScreen();
         GenPassword();
-        Terminal.WriteLine("Please enter your password");
+        Terminal.WriteLine("Enter your password, "+"hint: "+Password.Anagram());
+        Terminal.WriteLine(MenuHint);
     }
 
-    void CheckPassword(string input)
+    async Task CheckPasswordAsync(string input)
     {
         if (input == Password)
         {
@@ -69,16 +93,32 @@ public class Hacker : MonoBehaviour
         }
         else
         {
-            Terminal.WriteLine("Wrong password");
+            await Task.Delay(250);
+            Terminal.ClearScreen();
+            Terminal.WriteLine("Sorry,wrong password");
+            await Task.Delay(1000);
+            AskForPassword();
         }
     }
     void GenPassword(){
         switch (Level) {
             case 1:
-                Password = Level1Passwords[Random.Range(0, Level1Passwords.Length)];
+                do
+                {
+                    Password = Passwords[Random.Range(0, Passwords.Length)];
+                } while (Password.Length>4);//1,2,3,4
                 break;
             case 2:
-                Password = Level2Passwords[Random.Range(0, Level2Passwords.Length)];
+                do
+                {
+                    Password = Passwords[Random.Range(0, Passwords.Length)];
+                } while (Password.Length >8 || Password.Length < 5);//8,7,6,5,
+                break;
+            case 3:
+                do
+                {
+                    Password = Passwords[Random.Range(0, Passwords.Length)];
+                } while (Password.Length < 9); //9,10,11,...
                 break;
             default:
                 Debug.LogError("Invalid level number");
@@ -104,6 +144,7 @@ public class Hacker : MonoBehaviour
  /______//
 (______(/
 ");
+                Terminal.WriteLine("Play again for greater challenge");
                 break;
             case 2:
                 Terminal.WriteLine("You got the prison key");
@@ -116,11 +157,23 @@ public class Hacker : MonoBehaviour
   <_/
 
 ");
+                Terminal.WriteLine("Play again for greater challenge");
+                break;
+            case 3:
+                Terminal.WriteLine("You got into NASA server!!");
+                Terminal.WriteLine(@"
+ _ __   __ _ ___  __ _ 
+| '_ \ / _` / __|/ _` |
+| | | | (_| \__ \ (_| |
+|_| |_|\__,_|___/\__,_|
+");
+                Terminal.WriteLine("Wellcome to NASA server");
                 break;
             default:
                 Debug.LogError("Invalid level");
                 break;
         }
+        Terminal.WriteLine(MenuHint);
     }
 
     // Update is called once per frame
