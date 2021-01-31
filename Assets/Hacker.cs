@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -10,13 +11,15 @@ public class Hacker : MonoBehaviour
         Password,
         Win
     }
-    Screen CurrentScreen=Screen.MainMenu;
+    Screen CurrentScreen;
+    string Password;
     // Start is called before the first frame update
     void Start()
     {
         ShowMainMenu();
     }
     void ShowMainMenu() {
+        CurrentScreen = Screen.MainMenu;
         Terminal.ClearScreen();
         Terminal.WriteLine("What Would you like to hack into?" +
             " \nPress 1 for local library " +
@@ -26,22 +29,35 @@ public class Hacker : MonoBehaviour
     }
     void OnUserInput(string Input)
     {
-        if (Input == "menu"){ShowMainMenu();}
+        if (Input == "menu")
+        {
+            ShowMainMenu();
+        }
         else if (CurrentScreen == Screen.MainMenu) { RunMainMenu(Input); }
+        else if (CurrentScreen == Screen.Password) { CheckPassword(Input); }
+    }
+
+    private void CheckPassword(string input)
+    {
+        if (input == Password) {
+            CurrentScreen = Screen.Win;
+            Terminal.WriteLine("Well Done!!"); 
+        }
+        else { 
+            Terminal.WriteLine("Wrong password");
+        }
     }
 
     private void RunMainMenu(string Input)
     {
         if (Input == "1"){
             Level = 1;
+            Password = "dog";
             StartGame();
         }
         else if (Input == "2"){
             Level = 2;
-            StartGame();
-        }
-        else if (Input == "3"){
-            Level = 3;
+            Password = "Donkey";
             StartGame();
         }
         else if (Input == "007"){
