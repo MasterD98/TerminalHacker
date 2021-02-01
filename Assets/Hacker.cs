@@ -25,7 +25,16 @@ public class Hacker : MonoBehaviour
 
     void Initialize()
     {
-        Passwords=File.ReadAllLines("Assets/Passwords.txt");
+        
+        try{
+            Passwords = File.ReadAllLines("Assets/Passwords.txt");
+        }catch (FileNotFoundException ex)
+        {
+            Debug.LogException(ex);
+            Task.Delay(5000);
+            Application.Quit();
+        }
+        
     }
 
     void ShowStart()
