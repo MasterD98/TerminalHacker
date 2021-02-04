@@ -1,11 +1,13 @@
 ﻿using System.IO;
 using System.Threading.Tasks;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class Hacker : MonoBehaviour
 {
     int Level;
-    enum Screen {
+    enum Screen
+    {
         MainMenu,
         Password,
         Win
@@ -13,43 +15,50 @@ public class Hacker : MonoBehaviour
     Screen CurrentScreen;
     string Password;
     string[] Passwords;
-    const string MenuHint = "Type menu at any time to return menu";
+    const string MenuHint = "Type menu/quit to return menu or quit";
+    [SerializeField] float startScreenWaitTime = 3f;
     // Start is called before the first frame update
-    async void Start()
+    void Start()
     {
+        Cursor.visible = false;
         Initialize();
         ShowStart();
-        await Task.Delay(3000);
-        ShowMainMenu();
+        Invoke("ShowMainMenu", startScreenWaitTime);
     }
 
     void Initialize()
     {
-        
-        try{
-            Passwords = File.ReadAllLines("Assets/Passwords.txt");
-        }catch (FileNotFoundException ex)
+
+        try
+        {
+            //convert text componet to string array
+            Text text = GetComponent<Text>();
+            Passwords = text.text.Split('\n');
+        }
+        catch (FileNotFoundException ex)
         {
             Debug.LogException(ex);
-            Task.Delay(5000);
             Application.Quit();
         }
-        
+
     }
 
     void ShowStart()
     {
         Terminal.WriteLine(@"
- _                _             
-| |              | |            
-| |__   __ _  ___| | _____ _ __ 
-| '_ \ / _` |/ __| |/ / _ \ '__|
-| | | | (_| | (__|   <  __/ |   
-|_| |_|\__,_|\___|_|\_\___|_| 
-");
+
+  /\  /\__ _  ___| | _____ _ __  
+ / /_/ / _` |/ __| |/ / _ \ '__| 
+/ __  / (_| | (__|   <  __/ |    
+\/ /_/ \__,_|\___|_|\_\___|_|
+                /\/\   __ _ _ __  
+               /    \ / _` | '_ \ 
+              / /\/\ \ (_| | | | |
+              \/    \/\__,_|_| |_|");
     }
 
-    void ShowMainMenu() {
+    void ShowMainMenu()
+    {
         CurrentScreen = Screen.MainMenu;
         Terminal.ClearScreen();
         Terminal.WriteLine("What Would you like to hack into?" +
@@ -58,70 +67,78 @@ public class Hacker : MonoBehaviour
             "\nPress 3 for NASA" +
             "\n\nEnter your selection");
     }
-    async void OnUserInput(string Input)
+    void OnUserInput(string Input)
     {
-        if (Input == "menu"){ShowMainMenu();}
-        else if (Input=="quit"|| Input=="close"||Input=="exit") {Application.Quit();}
-        else if (CurrentScreen == Screen.MainMenu) { RunMainMenu(Input); }
-        else if (CurrentScreen == Screen.Password) { await CheckPasswordAsync(Input); }
+        if (Input == "menu") { Invoke("ShowMainMenu", 1f); }
+        else if (Input == "quit" || Input == "close" || Input == "exit") { Application.Quit(); }
+        else if (CurrentScreen == Screen.MainMenu) {RunMainMenu(Input);}
+        else if (CurrentScreen == Screen.Password) { CheckPassword(Input); }
     }
-
-    
-
 
     void RunMainMenu(string Input)
     {
-        bool isValidInput = (Input == "1" || Input == "2" || Input=="3");
-        if (isValidInput) {
+        bool isValidInput = (Input == "1" || Input == "2" || Input == "3");
+        if (isValidInput)
+        {
             Level = int.Parse(Input);
-            AskForPassword();
+            Invoke("AskForPassword", 1f);
         }
-        else if (Input == "007"){
+        else if (Input == "007")
+        {
             Terminal.WriteLine("Please select a level Mr.Bond");
             Terminal.WriteLine(MenuHint);
         }
-        else{
+        else
+        {
             Terminal.WriteLine("Please choose a valid input");
             Terminal.WriteLine(MenuHint);
         }
     }
 
-    void AskForPassword() {
+    void AskForPassword()
+    {
         CurrentScreen = Screen.Password;
         Terminal.ClearScreen();
         GenPassword();
-        Terminal.WriteLine("Enter your password, "+"hint: "+Password.Anagram());
+        Terminal.WriteLine("Enter your password, " + "hint: " + Password.Anagram());
         Terminal.WriteLine(MenuHint);
     }
 
-    async Task CheckPasswordAsync(string input)
+    void CheckPassword(string input)
     {
         if (input == Password)
         {
-            DisplayWinScreen();
+            Invoke("ShowPasswordCorrectMessage", 1f);
+            Invoke("DisplayWinScreen", 2f);
         }
         else
         {
-            await Task.Delay(250);
-            Terminal.ClearScreen();
-            Terminal.WriteLine("Sorry,wrong password");
-            await Task.Delay(1000);
-            AskForPassword();
+            Invoke("ShowWrongPasswordMessage", 1f);
+            Invoke("AskForPassword", 2f);
         }
     }
-    void GenPassword(){
-        switch (Level) {
+
+    void ShowWrongPasswordMessage()
+    {
+        Terminal.ClearScreen();
+        Terminal.WriteLine("Sorry, Password Incorrect!!");
+    }
+
+    void GenPassword()
+    {
+        switch (Level)
+        {
             case 1:
                 do
                 {
                     Password = Passwords[Random.Range(0, Passwords.Length)];
-                } while (Password.Length>4);//1,2,3,4
+                } while (Password.Length > 4);//1,2,3,4
                 break;
             case 2:
                 do
                 {
                     Password = Passwords[Random.Range(0, Passwords.Length)];
-                } while (Password.Length >8 || Password.Length < 5);//8,7,6,5,
+                } while (Password.Length > 8 || Password.Length < 5);//8,7,6,5,
                 break;
             case 3:
                 do
@@ -143,12 +160,12 @@ public class Hacker : MonoBehaviour
 
     void ShowLevelReward()
     {
-        switch (Level) {
+        switch (Level)
+        {
             case 1:
-                Terminal.WriteLine("Have a book");
+                Terminal.WriteLine("You Got into Library..! \nNow you can have any book you want");
                 Terminal.WriteLine(@"
-    _______
-   /      /,
+   ________
   /      //
  /______//
 (______(/
@@ -156,14 +173,11 @@ public class Hacker : MonoBehaviour
                 Terminal.WriteLine("Play again for greater challenge");
                 break;
             case 2:
-                Terminal.WriteLine("You got the prison key");
-                Terminal.WriteLine(@"
-/<__>\
-\    /
- '. |
-  < |
-  < |
-  <_/
+                Terminal.WriteLine("You got into Local Police\nand found the prison key");
+                Terminal.WriteLine(@" 
+ __
+/o \__________
+\__/-=`=`=`=`/
 
 ");
                 Terminal.WriteLine("Play again for greater challenge");
@@ -185,9 +199,9 @@ public class Hacker : MonoBehaviour
         Terminal.WriteLine(MenuHint);
     }
 
-    // Update is called once per frame
-    void Update()
+    void ShowPasswordCorrectMessage()
     {
-        
+        Terminal.ClearScreen();
+        Terminal.WriteLine("Password correct!!");
     }
 }
