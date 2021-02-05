@@ -121,7 +121,7 @@ public class Hacker : MonoBehaviour
     void ShowWrongPasswordMessage()
     {
         Terminal.ClearScreen();
-        Terminal.WriteLine("Sorry, Password Incorrect!!");
+        Terminal.WriteLine("Password Incorrect!!");
     }
 
     void GenPassword()
@@ -173,7 +173,7 @@ public class Hacker : MonoBehaviour
                 Terminal.WriteLine("Play again for greater challenge");
                 break;
             case 2:
-                Terminal.WriteLine("You got into Local Police\nand found the prison key");
+                Terminal.WriteLine("You got into Police Station\nand found the prison key");
                 Terminal.WriteLine(@" 
  __
 /o \__________
